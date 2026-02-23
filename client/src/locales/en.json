@@ -1,0 +1,87 @@
+{
+  "appName": "Nirmal Health",
+  "nav": {
+    "home": "Home",
+    "hospitals": "Hospitals",
+    "symptomChecker": "Symptom Checker",
+    "emergency": "Emergency"
+  },
+  "auth": { "login": "Login", "register": "Register", "logout": "Logout" },
+  "home": {
+    "badge": "Trusted Healthcare in Nirmal",
+    "title": "Your Health, Our Priority",
+    "subtitle": "Find the right hospital and doctor in Nirmal district. AI-powered symptom analysis and easy appointment booking.",
+    "getStarted": "Get Started",
+    "findHospitals": "Find Hospitals",
+    "emergency108": "Emergency 108",
+    "stats": {
+      "hospitals": "5+ Hospitals",
+      "doctors": "25+ Doctors",
+      "emergency": "24/7 Emergency",
+      "secure": "100% Secure"
+    }
+  },
+  "hospitals": {
+    "title": "Hospitals",
+    "subtitle": "Find hospitals in Nirmal district",
+    "searchPlaceholder": "Search hospitals...",
+    "allSpecialties": "All Specialties",
+    "allTypes": "All Types",
+    "apply": "Apply",
+    "findNearMe": "Find Hospitals Near Me",
+    "viewDetails": "View Details",
+    "call": "Call",
+    "beds": "beds",
+    "government": "Government",
+    "private": "Private",
+    "multiSpecialty": "Multi-Specialty",
+    "nursingHome": "Nursing Home"
+  },
+  "symptoms": {
+    "title": "AI Symptom Analysis",
+    "subtitle": "Describe your symptoms to get AI-powered recommendations.",
+    "describeTitle": "Describe Your Symptoms",
+    "symptomsPlaceholder": "Describe your symptoms in detail...",
+    "age": "Age",
+    "agePlaceholder": "e.g., 30",
+    "gender": "Gender",
+    "genderSelect": "Select",
+    "medicalHistory": "Medical History (if any)",
+    "medicalHistoryPlaceholder": "e.g., Diabetes, High BP, Previous surgeries...",
+    "analyze": "Analyze Symptoms",
+    "enterPrompt": "Enter Your Symptoms",
+    "enterPromptDesc": "Describe your symptoms on the left and click 'Analyze Symptoms' to get AI-powered recommendations.",
+    "disclaimer": "Important Disclaimer: This AI analysis is for informational purposes only and should not replace professional medical advice. Always consult a qualified healthcare provider for diagnosis and treatment.",
+    "suggestedSpecialty": "Suggested specialty",
+    "possibleConditions": "Possible conditions (for awareness only)",
+    "recommendedHospitals": "Recommended hospitals"
+  },
+  "emergency": {
+    "title": "Emergency",
+    "subtitle": "Quick access to emergency services",
+    "contacts": "Emergency Contacts",
+    "ambulance": "Ambulance",
+    "police": "Police",
+    "fire": "Fire",
+    "womenHelpline": "Women Helpline",
+    "childHelpline": "Child Helpline",
+    "findNearest": "Find Nearest Emergency Hospitals",
+    "nearestHospitals": "Nearest Emergency Hospitals",
+    "callHospital": "Call"
+  },
+  "footer": {
+    "tagline": "Your trusted healthcare companion in Nirmal district, Telangana.",
+    "quickLinks": "Quick Links",
+    "emergencyNumbers": "Emergency Numbers",
+    "copyright": "© 2024 Nirmal Health. All rights reserved."
+  },
+  "howItWorks": {
+    "title": "How It Works",
+    "step1": "Describe Symptoms",
+    "step1Desc": "Tell us what you are experiencing and our AI will analyze your symptoms.",
+    "step2": "Find Hospital",
+    "step2Desc": "Get matched with the right hospital and specialist near you.",
+    "step3": "Book Appointment",
+    "step3Desc": "Schedule your visit instantly or call for emergency assistance."
+  }
+}
