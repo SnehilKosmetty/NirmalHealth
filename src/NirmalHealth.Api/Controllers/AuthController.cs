@@ -60,6 +60,24 @@ public class AuthController : ControllerBase
         if (user == null) return NotFound();
         return Ok(user);
     }
+
+    [Authorize]
+    [HttpPut("me")]
+    public async Task<ActionResult<UserInfoDto>> UpdateProfile([FromBody] UpdateProfileRequestDto dto, CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var id)) return Unauthorized();
+        try
+        {
+            var user = await _auth.UpdateProfileAsync(id, dto, ct);
+            if (user == null) return NotFound();
+            return Ok(user);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
 
 public class RefreshRequest { public string? RefreshToken { get; set; } }

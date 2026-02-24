@@ -1,76 +1,106 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { api, type AppointmentDto } from '../../api/client';
+import { api, type AppointmentDto, type HospitalListItem } from '../../api/client';
+import { formatDateDMY, formatTime12h } from '../../utils/dateTime';
+import './Admin.css';
 
 export default function AdminAppointments() {
   const { user } = useAuth();
   const [list, setList] = useState<AppointmentDto[]>([]);
+  const [hospitals, setHospitals] = useState<HospitalListItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hospitalId, setHospitalId] = useState(user?.hospitalId ?? 1);
+  const isSuperAdmin = user?.roles.includes('SuperAdmin');
+  const hospitalIdFromUser = user?.hospitalId ?? null;
+  const [hospitalId, setHospitalId] = useState<number | ''>(isSuperAdmin ? '' : (hospitalIdFromUser ?? ''));
   const [date, setDate] = useState('');
 
   useEffect(() => {
-    const hid = user?.roles.includes('SuperAdmin') ? hospitalId : (user?.hospitalId ?? 0);
-    if (!hid) {
+    if (isSuperAdmin) {
+      api.admin.hospitals.list().then(setHospitals).catch(() => setHospitals([]));
+    }
+  }, [isSuperAdmin]);
+
+  useEffect(() => {
+    if (!isSuperAdmin && !hospitalIdFromUser) {
       setLoading(false);
       return;
     }
-    api.admin.appointments.list(hid, date || undefined)
+    const hid = isSuperAdmin ? (hospitalId === '' ? undefined : Number(hospitalId)) : hospitalIdFromUser ?? undefined;
+    api.admin.appointments.list(hid ?? null, date || undefined)
       .then(setList)
       .catch(() => setList([]))
       .finally(() => setLoading(false));
-  }, [user?.hospitalId, user?.roles, hospitalId, date]);
+  }, [isSuperAdmin, hospitalIdFromUser, hospitalId, date]);
 
-  const showHospitalFilter = user?.roles.includes('SuperAdmin');
+  if (!isSuperAdmin && hospitalIdFromUser == null) {
+    return (
+      <div className="container page admin-page">
+        <Link to="/admin" className="admin-back-link">← Back to Dashboard</Link>
+        <h1 className="page-title">Appointments</h1>
+        <p className="admin-empty">No hospital assigned to your account. Contact Super Admin.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="container page">
-      <h1 className="page-title">Admin · Appointments</h1>
-      <p className="page-subtitle">Bookings for your hospital</p>
-      {showHospitalFilter && (
-        <div style={{ marginBottom: '1rem' }}>
+    <div className="container page admin-page">
+      <Link to="/admin" className="admin-back-link">← Back to Dashboard</Link>
+      <h1 className="page-title">Appointments</h1>
+      <p className="page-subtitle">
+        {isSuperAdmin ? 'View all bookings or filter by hospital' : 'Bookings for your hospital'}
+      </p>
+
+      {isSuperAdmin && (
+        <div className="admin-filters">
           <label>
-            Hospital ID{' '}
-            <input
-              type="number"
-              min={1}
-              value={hospitalId}
-              onChange={(e) => setHospitalId(Number(e.target.value))}
-              style={{ width: 80, padding: '0.35rem' }}
-            />
+            Hospital
+            <select
+              value={hospitalId === '' ? 'all' : hospitalId}
+              onChange={(e) => setHospitalId(e.target.value === 'all' ? '' : Number(e.target.value))}
+            >
+              <option value="all">All hospitals</option>
+              {hospitals.map((h) => (
+                <option key={h.id} value={h.id}>{h.name}</option>
+              ))}
+            </select>
           </label>
-          <label style={{ marginLeft: '1rem' }}>
-            Date (optional){' '}
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              style={{ padding: '0.35rem' }}
-            />
+          <label>
+            Date (optional)
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </label>
         </div>
       )}
-      {!showHospitalFilter && (
-        <label style={{ marginBottom: '1rem', display: 'block' }}>
-          Date (optional){' '}
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ padding: '0.35rem' }} />
-        </label>
+      {!isSuperAdmin && (
+        <div className="admin-filters">
+          <label>
+            Date (optional)
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </label>
+        </div>
       )}
+
       {loading ? (
-        <p>Loading...</p>
+        <p className="admin-loading">Loading…</p>
+      ) : list.length === 0 ? (
+        <p className="admin-empty">No appointments.</p>
       ) : (
-        <div className="admin-list">
+        <div className="admin-list-grid">
           {list.map((a) => (
-            <div key={a.id} className="card" style={{ padding: '1rem', marginBottom: '0.75rem' }}>
-              <strong>{a.patientName}</strong> with {a.doctorName} at {a.hospitalName}
-              <p style={{ margin: '0.25rem 0 0', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
-                {a.date} {a.startTime} · {a.consultationType} · {a.status}
+            <div key={a.id} className="admin-list-card" style={{ cursor: 'default', textDecoration: 'none' }}>
+              <div className="card-name">{a.patientName}</div>
+              <p className="card-meta">
+                with Dr. {a.doctorName} at {a.hospitalName}
+                <br />
+                {formatDateDMY(a.date)} at {formatTime12h(a.startTime)}
+                <br />
+                {a.consultationType} · <strong>{a.status}</strong>
+                {a.chiefComplaint && <><br />Reason: {a.chiefComplaint}</>}
               </p>
             </div>
           ))}
         </div>
       )}
-      {!loading && list.length === 0 && <p className="empty-msg">No appointments.</p>}
     </div>
   );
 }

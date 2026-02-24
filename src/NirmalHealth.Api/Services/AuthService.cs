@@ -22,19 +22,27 @@ public class AuthService : IAuthService
         _config = config;
     }
 
+    /// <summary>One-way hash of Aadhaar. Full number is never stored anywhere.</summary>
+    private string HashAadhaar(string digits12)
+    {
+        var salt = _config["Secrets:AadhaarSalt"] ?? _config["Aadhaar:Salt"] ?? throw new InvalidOperationException("Secrets:AadhaarSalt or Aadhaar:Salt must be set for Aadhaar verification.");
+        using var sha = SHA256.Create();
+        var bytes = Encoding.UTF8.GetBytes(salt + digits12);
+        var hash = sha.ComputeHash(bytes);
+        return Convert.ToBase64String(hash);
+    }
+
     public async Task<LoginResultDto> RegisterAsync(RegisterRequestDto dto, CancellationToken ct = default)
     {
         if (await _db.Users.AnyAsync(u => u.Email == dto.Email || u.Phone == dto.Phone, ct))
             throw new InvalidOperationException("Email or phone already registered.");
 
-        var aadhaarMasked = (string?)null;
-        var aadhaarVerified = false;
-        if (!string.IsNullOrWhiteSpace(dto.AadhaarNumber) && dto.AadhaarNumber.Length == 12)
-        {
-            // TODO: Call licensed eKYC provider API here. For now we accept and mask.
-            aadhaarMasked = "XXXXXX" + dto.AadhaarNumber[^4..];
-            aadhaarVerified = true;
-        }
+        var digits = string.IsNullOrWhiteSpace(dto.AadhaarNumber) ? null : new string(dto.AadhaarNumber.Where(char.IsDigit).ToArray());
+        if (digits == null || digits.Length != 12)
+            throw new InvalidOperationException("Aadhaar verification is required to create your profile. Please enter your 12-digit Aadhaar number.");
+
+        // Store only one-way hash; no part of Aadhaar is stored in plain text.
+        var aadhaarHash = HashAadhaar(digits);
 
         var user = new User
         {
@@ -42,8 +50,9 @@ public class AuthService : IAuthService
             Phone = dto.Phone.Trim(),
             PasswordHash = HashPassword(dto.Password),
             FullName = dto.FullName.Trim(),
-            AadhaarMasked = aadhaarMasked,
-            AadhaarVerified = aadhaarVerified,
+            AadhaarMasked = null,
+            AadhaarHash = aadhaarHash,
+            AadhaarVerified = true,
             PreferredLanguage = dto.PreferredLanguage ?? "en",
             IsActive = true,
             CreatedAtUtc = DateTime.UtcNow
@@ -90,6 +99,65 @@ public class AuthService : IAuthService
             .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive, ct);
         if (user == null) return null;
+        return ToUserInfo(user);
+    }
+
+    public async Task<UserInfoDto?> UpdateProfileAsync(int userId, UpdateProfileRequestDto dto, CancellationToken ct = default)
+    {
+        var user = await _db.Users
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive, ct);
+        if (user == null) return null;
+
+        // If Aadhaar is not yet verified, only allow submitting Aadhaar (to verify). No other profile fields can be updated until verified.
+        if (!user.AadhaarVerified)
+        {
+            var digits = string.IsNullOrWhiteSpace(dto.AadhaarNumber) ? null : new string(dto.AadhaarNumber.Where(char.IsDigit).ToArray());
+            if (digits == null || digits.Length != 12)
+                throw new InvalidOperationException("Please verify your Aadhaar with a 12-digit number to create and update your profile.");
+            user.AadhaarHash = HashAadhaar(digits);
+            user.AadhaarMasked = null;
+            user.AadhaarVerified = true;
+            user.UpdatedAtUtc = DateTime.UtcNow;
+            await _db.SaveChangesAsync(ct);
+            return ToUserInfo(user);
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.FullName))
+            user.FullName = dto.FullName.Trim();
+
+        if (dto.Email != null)
+        {
+            var email = dto.Email.Trim().ToLowerInvariant();
+            if (email != user.Email && await _db.Users.AnyAsync(u => u.Id != userId && u.Email == email, ct))
+                throw new InvalidOperationException("Email already in use.");
+            user.Email = email;
+        }
+
+        if (dto.Phone != null)
+        {
+            var phone = dto.Phone.Trim();
+            if (phone != user.Phone && await _db.Users.AnyAsync(u => u.Id != userId && u.Phone == phone, ct))
+                throw new InvalidOperationException("Phone already in use.");
+            user.Phone = phone;
+        }
+
+        if (dto.PreferredLanguage != null)
+            user.PreferredLanguage = dto.PreferredLanguage.Trim().Length > 0 ? dto.PreferredLanguage.Trim() : "en";
+
+        if (!string.IsNullOrWhiteSpace(dto.AadhaarNumber))
+        {
+            var digits = new string(dto.AadhaarNumber.Where(char.IsDigit).ToArray());
+            if (digits.Length == 12)
+            {
+                user.AadhaarHash = HashAadhaar(digits);
+                user.AadhaarMasked = null;
+                user.AadhaarVerified = true;
+            }
+        }
+
+        user.UpdatedAtUtc = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
         return ToUserInfo(user);
     }
 
@@ -167,6 +235,7 @@ public class AuthService : IAuthService
         catch { return null; }
     }
 
+    /// <summary>Never expose any part of Aadhaar to client. Only verified status.</summary>
     private static UserInfoDto ToUserInfo(User user) => new()
     {
         Id = user.Id,
@@ -174,6 +243,7 @@ public class AuthService : IAuthService
         Phone = user.Phone,
         FullName = user.FullName,
         PreferredLanguage = user.PreferredLanguage,
+        AadhaarMasked = user.AadhaarVerified ? "Verified" : null,
         AadhaarVerified = user.AadhaarVerified,
         Roles = user.UserRoles.Select(ur => ur.Role.Name).ToArray(),
         HospitalId = user.HospitalId

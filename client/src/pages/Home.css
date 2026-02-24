@@ -16,14 +16,22 @@
 }
 
 .hero-badge {
-  display: inline-block;
-  background: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: var(--color-primary);
   padding: 0.35rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.875rem;
   font-weight: 600;
   margin-bottom: 1rem;
+  border: 1px solid var(--color-primary);
+}
+.hero-badge-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }
 
 .hero-title {
@@ -50,14 +58,18 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--color-primary-light);
+  background: var(--color-surface);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font-weight: 600;
-  color: var(--color-primary-dark);
+  color: var(--color-text);
+  border: 1px solid var(--color-primary);
 }
 .hero-emergency-icon {
-  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-primary);
+  flex-shrink: 0;
 }
 
 .hero-image {
@@ -67,19 +79,20 @@
 .hero-image-placeholder {
   width: 280px;
   height: 320px;
-  background: linear-gradient(145deg, #fecaca 0%, #fca5a5 100%);
+  background: var(--color-emergency);
   border-radius: 1rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
 }
 
 .stats {
-  padding: 2rem 0;
-  border-top: 1px solid var(--color-border);
+  padding: 2.5rem 0;
+  background: var(--color-bg-stats);
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
+  gap: 2rem;
 }
 @media (max-width: 768px) {
   .stats-grid {
@@ -90,32 +103,145 @@
 .stat-card {
   text-align: center;
   padding: 1.5rem;
-  background: white;
-  border-radius: 1rem;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.stat-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.25rem;
 }
 .stat-icon {
-  display: block;
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+  width: 28px;
+  height: 28px;
   color: var(--color-primary);
 }
 .stat-value {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 1.5rem;
   color: var(--color-text);
+  line-height: 1.2;
+}
+.stat-label {
+  font-size: 0.9375rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+/* Healthcare Made Simple – feature cards below stats */
+.features {
+  padding: 3rem 0;
+  background: var(--color-bg-subtle);
+}
+.features-title {
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 0.5rem;
+}
+.features-subtitle {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin: 0 0 2rem;
+}
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+@media (max-width: 992px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 576px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.feature-card {
+  background: var(--color-surface);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border);
+  text-align: left;
+}
+.feature-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+}
+.feature-icon-teal {
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--color-primary);
+}
+.feature-icon-blue {
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+}
+.feature-icon-purple {
+  background: rgba(147, 51, 234, 0.12);
+  color: #9333ea;
+}
+.feature-icon-orange {
+  background: rgba(249, 115, 22, 0.12);
+  color: #f97316;
+}
+.feature-icon {
+  width: 24px;
+  height: 24px;
+}
+.feature-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 0.5rem;
+}
+.feature-card-desc {
+  font-size: 0.9375rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
 }
 
 .how-it-works {
   padding: 3rem 0;
-  background: #f9fafb;
+  background: var(--color-surface);
 }
 
 .section-title {
   text-align: center;
   font-size: 1.75rem;
-  margin: 0 0 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
   color: var(--color-text);
+}
+.section-subtitle {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin: 0 0 2rem;
 }
 
 .steps {
@@ -149,6 +275,8 @@
 .step h3 {
   margin: 0 0 0.5rem;
   font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
 }
 .step p {
   margin: 0;
@@ -158,15 +286,69 @@
 
 .step-connector {
   width: 40px;
-  height: 2px;
-  background: var(--color-border);
+  height: 0;
+  border: none;
+  border-top: 2px dashed var(--color-border);
   margin-top: 2.5rem;
+  flex-shrink: 0;
 }
 @media (max-width: 768px) {
   .step-connector {
     width: 100%;
-    margin: 0;
-    height: 0;
     min-width: 100%;
+    margin: 0;
   }
+}
+
+/* Emergency banner – orange–red gradient, rounded */
+.emergency-banner {
+  padding: 2rem 0;
+  background: linear-gradient(90deg, var(--color-emergency-banner-start) 0%, var(--color-emergency-banner-end) 100%);
+  margin: 0 1rem;
+  border-radius: 1rem;
+}
+.emergency-banner-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.emergency-banner-text {
+  flex: 1;
+  min-width: 200px;
+}
+.emergency-banner-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+}
+.emergency-banner-subtitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.95);
+}
+.emergency-banner-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 9999px;
+  background: white;
+  color: var(--color-emergency-banner-end);
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  transition: opacity 0.2s;
+}
+.emergency-banner-btn:hover {
+  text-decoration: none;
+  opacity: 0.95;
+}
+.emergency-banner-btn-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: var(--color-emergency-banner-end);
 }

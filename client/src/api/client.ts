@@ -25,13 +25,23 @@ async function request<T>(
   const res = await fetch(url, { ...options, headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error((err as { message?: string }).message || res.statusText);
+    const data = err as { message?: string; detail?: string };
+    const msg = data.detail ? `${data.message ?? res.statusText}: ${data.detail}` : (data.message || res.statusText);
+    throw new Error(msg);
   }
   if (res.status === 204) return undefined as T;
   return res.json();
 }
 
+export interface StatsDto {
+  hospitalsCount: number;
+  doctorsCount: number;
+}
+
 export const api = {
+  stats: {
+    get: () => request<StatsDto>(`/stats`),
+  },
   auth: {
     register: (body: { email: string; phone: string; password: string; fullName: string; aadhaarNumber?: string; preferredLanguage?: string }) =>
       request<{ accessToken: string; refreshToken: string; expiresAtUtc: string; user: UserInfo }>(`/auth/register`, { method: 'POST', body: JSON.stringify(body) }),
@@ -40,6 +50,8 @@ export const api = {
     refresh: (refreshToken: string) =>
       request<{ accessToken: string; refreshToken: string; user: UserInfo }>(`/auth/refresh`, { method: 'POST', body: JSON.stringify({ refreshToken }) }),
     me: () => request<UserInfo>(`/auth/me`),
+    updateProfile: (body: { fullName?: string; email?: string; phone?: string; aadhaarNumber?: string; preferredLanguage?: string }) =>
+      request<UserInfo>(`/auth/me`, { method: 'PUT', body: JSON.stringify(body) }),
   },
   hospitals: {
     list: (params?: { search?: string; specialty?: string; type?: string }) => {
@@ -76,6 +88,9 @@ export const api = {
     book: (body: { slotId: number; chiefComplaint?: string }) =>
       request<AppointmentDto>(`/appointments/book`, { method: 'POST', body: JSON.stringify(body) }),
     my: () => request<AppointmentDto[]>(`/appointments/my`),
+    cancel: (id: number) => request<AppointmentDto>(`/appointments/${id}/cancel`, { method: 'PATCH' }),
+    update: (id: number, body: { chiefComplaint?: string; slotId?: number }) =>
+      request<AppointmentDto>(`/appointments/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   },
   symptoms: {
     analyze: (body: { symptomsText: string; age?: number; gender?: string; medicalHistory?: string }) =>
@@ -92,6 +107,9 @@ export const api = {
     },
   },
   admin: {
+    stats: {
+      get: () => request<{ hospitalsCount: number; doctorsCount: number; appointmentsCount: number }>(`/admin/AdminStats`),
+    },
     hospitals: {
       list: () => request<HospitalListItem[]>(`/admin/AdminHospitals`),
       get: (id: number) => request<HospitalDetail>(`/admin/AdminHospitals/${id}`),
@@ -100,11 +118,17 @@ export const api = {
     },
     doctors: {
       list: (hospitalId?: number) => request<DoctorListItem[]>(`/admin/AdminDoctors${hospitalId != null ? `?hospitalId=${hospitalId}` : ''}`),
+      get: (id: number) => request<DoctorDetail>(`/admin/AdminDoctors/${id}`),
       create: (body: CreateDoctorBody) => request<DoctorListItem>(`/admin/AdminDoctors`, { method: 'POST', body: JSON.stringify(body) }),
       update: (id: number, body: UpdateDoctorBody) => request<void>(`/admin/AdminDoctors/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
     },
     appointments: {
-      list: (hospitalId: number, date?: string) => request<AppointmentDto[]>(`/admin/AdminAppointments?hospitalId=${hospitalId}${date ? `&date=${date}` : ''}`),
+      list: (hospitalId?: number | null, date?: string) => {
+        const params = new URLSearchParams();
+        if (hospitalId != null && hospitalId > 0) params.set('hospitalId', String(hospitalId));
+        if (date) params.set('date', date);
+        return request<AppointmentDto[]>(`/admin/AdminAppointments${params.toString() ? '?' + params.toString() : ''}`);
+      },
     },
     users: {
       createHospitalAdmin: (body: CreateHospitalAdminBody) => request<{ id: number }>(`/admin/AdminUsers/hospital-admin`, { method: 'POST', body: JSON.stringify(body) }),
@@ -171,6 +195,7 @@ export interface UserInfo {
   phone: string;
   fullName: string;
   preferredLanguage: string;
+  aadhaarMasked?: string | null;
   aadhaarVerified: boolean;
   roles: string[];
   hospitalId?: number;
@@ -228,6 +253,7 @@ export interface SlotDto {
 export interface AppointmentDto {
   id: number;
   slotId: number;
+  doctorId: number;
   date: string;
   startTime: string;
   consultationType: string;

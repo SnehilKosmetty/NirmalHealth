@@ -7,8 +7,10 @@ public class User
     public string Phone { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
-    /// <summary>Masked Aadhaar e.g. XXXXXX1234. Full number never stored.</summary>
+    /// <summary>Deprecated: no digits stored. Kept for DB compatibility; use AadhaarHash.</summary>
     public string? AadhaarMasked { get; set; }
+    /// <summary>One-way hash (SHA256) of Aadhaar with server salt. Full number never stored.</summary>
+    public string? AadhaarHash { get; set; }
     public bool AadhaarVerified { get; set; }
     public string PreferredLanguage { get; set; } = "en";
     public bool IsActive { get; set; } = true;

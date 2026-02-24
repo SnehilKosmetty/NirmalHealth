@@ -17,11 +17,13 @@ public class AdminDoctorsController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IAuditService _audit;
+    private readonly IDoctorService _doctorService;
 
-    public AdminDoctorsController(AppDbContext db, IAuditService audit)
+    public AdminDoctorsController(AppDbContext db, IAuditService audit, IDoctorService doctorService)
     {
         _db = db;
         _audit = audit;
+        _doctorService = doctorService;
     }
 
     private static int? GetCurrentHospitalId(ClaimsPrincipal user)
@@ -37,7 +39,8 @@ public class AdminDoctorsController : ControllerBase
     {
         var myHospitalId = GetCurrentHospitalId(User);
         var effectiveHospitalId = myHospitalId ?? hospitalId;
-        if (effectiveHospitalId == null && myHospitalId == null) return BadRequest("hospitalId required for HospitalAdmin.");
+        if (effectiveHospitalId == null && User.FindFirstValue(ClaimTypes.Role) == RoleNames.HospitalAdmin)
+            return BadRequest("Hospital not assigned to your account.");
         var q = _db.Doctors.AsNoTracking().Include(d => d.Hospital).Include(d => d.DoctorSpecialties).ThenInclude(ds => ds.Specialty).Where(d => d.IsActive);
         if (effectiveHospitalId.HasValue) q = q.Where(d => d.HospitalId == effectiveHospitalId.Value);
         var list = await q.OrderBy(d => d.FullName).ToListAsync(ct);
@@ -53,6 +56,16 @@ public class AdminDoctorsController : ControllerBase
             SupportsVideo = d.SupportsVideo,
             Phone = d.Phone
         }));
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<DoctorDetailDto>> Get(int id, CancellationToken ct)
+    {
+        var myHospitalId = GetCurrentHospitalId(User);
+        var doctor = await _doctorService.GetDoctorByIdAsync(id, ct);
+        if (doctor == null) return NotFound();
+        if (myHospitalId.HasValue && doctor.HospitalId != myHospitalId.Value) return Forbid();
+        return Ok(doctor);
     }
 
     [HttpPost]

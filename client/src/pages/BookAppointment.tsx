@@ -1,8 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api, type SlotDto } from '../api/client';
+import { formatDateDMY, formatTime12h } from '../utils/dateTime';
+import './BookAppointment.css';
 
 export default function BookAppointment() {
+  const { t } = useTranslation();
   const { doctorId } = useParams<{ doctorId: string }>();
   const navigate = useNavigate();
   const [slots, setSlots] = useState<SlotDto[]>([]);
@@ -29,6 +33,17 @@ export default function BookAppointment() {
       .finally(() => setLoading(false));
   }, [doctorId, fromStr, toStr]);
 
+  const slotsByDate = useMemo(() => {
+    const map = new Map<string, SlotDto[]>();
+    for (const s of slots) {
+      const list = map.get(s.date) ?? [];
+      list.push(s);
+      map.set(s.date, list);
+    }
+    const sorted = Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+    return sorted;
+  }, [slots]);
+
   const handleBook = async () => {
     if (!selectedSlotId) return;
     setSubmitting(true);
@@ -40,54 +55,65 @@ export default function BookAppointment() {
     }
   };
 
-  if (!doctorId) return <div className="container page">Invalid doctor.</div>;
-  if (loading) return <div className="container page">Loading slots...</div>;
+  if (!doctorId) return <div className="container page">{t('bookAppointment.invalidDoctor')}</div>;
 
   return (
-    <div className="container page">
-      <h1 className="page-title">Book appointment</h1>
-      <p className="page-subtitle">Select a slot (next 14 days)</p>
+    <div className="container page book-appointment">
+      <h1 className="page-title">{t('bookAppointment.title')}</h1>
+      <p className="page-subtitle">{t('bookAppointment.subtitle')}</p>
 
-      <label style={{ display: 'block', marginBottom: '1rem' }}>
-        <span>Chief complaint (optional)</span>
+      <section className="section">
+        <label className="section-label">{t('bookAppointment.chiefComplaintLabel')}</label>
         <input
           type="text"
+          className="chief-complaint-input"
           value={chiefComplaint}
           onChange={(e) => setChiefComplaint(e.target.value)}
-          placeholder="Brief reason for visit"
-          style={{ width: '100%', padding: '0.5rem', marginTop: '0.25rem' }}
+          placeholder={t('bookAppointment.chiefComplaintPlaceholder')}
         />
-      </label>
+      </section>
 
-      <div className="slot-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem', marginBottom: '1.5rem' }}>
-        {slots.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            className={`card ${selectedSlotId === s.id ? 'selected' : ''}`}
-            style={{
-              padding: '0.75rem',
-              textAlign: 'left',
-              border: selectedSlotId === s.id ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-            }}
-            onClick={() => setSelectedSlotId(s.id)}
-          >
-            <strong>{s.date}</strong><br />
-            {s.startTime} – {s.endTime}<br />
-            <small>{s.consultationType}</small>
-          </button>
-        ))}
-      </div>
-      {slots.length === 0 && <p className="empty-msg">No available slots in this period.</p>}
-
-      <button
-        type="button"
-        className="btn btn-primary"
-        disabled={!selectedSlotId || submitting}
-        onClick={handleBook}
-      >
-        {submitting ? 'Booking...' : 'Confirm booking'}
-      </button>
+      <section className="section">
+        <span className="section-label">{t('bookAppointment.selectDateAndTime')}</span>
+        {loading ? (
+          <p className="loading-msg">{t('bookAppointment.loading')}</p>
+        ) : slots.length === 0 ? (
+          <p className="empty-msg">{t('bookAppointment.noSlots')}</p>
+        ) : (
+          <>
+            {slotsByDate.map(([date, dateSlots]) => (
+              <div key={date} className="date-group">
+                <div className="date-group-label">{formatDateDMY(date)}</div>
+                <div className="slot-grid">
+                  {dateSlots.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      className={`slot-card ${selectedSlotId === s.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedSlotId(s.id)}
+                    >
+                      <div className="slot-time">
+                        {formatTime12h(s.startTime)} – {formatTime12h(s.endTime)}
+                      </div>
+                      <div className="slot-type">{s.consultationType}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <div className="confirm-row">
+              <button
+                type="button"
+                className="btn btn-primary btn-confirm"
+                disabled={!selectedSlotId || submitting}
+                onClick={handleBook}
+              >
+                {submitting ? t('bookAppointment.booking') : t('bookAppointment.confirmBooking')}
+              </button>
+            </div>
+          </>
+        )}
+      </section>
     </div>
   );
 }

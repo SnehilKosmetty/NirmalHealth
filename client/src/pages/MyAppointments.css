@@ -1,0 +1,257 @@
+.my-appointments {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.my-appointments .page-title {
+  margin-bottom: 0.25rem;
+}
+
+.my-appointments .page-subtitle {
+  color: var(--color-text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.my-appointments .loading-msg {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 2rem;
+}
+
+.my-appointments .empty-msg {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 1.5rem;
+  margin: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+}
+
+.my-appointments .empty-msg a {
+  font-weight: 600;
+}
+
+.my-appointments .appointment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.my-appointments .appointment-card {
+  padding: 1.25rem 1.25rem;
+  margin: 0;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.my-appointments .appointment-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.12);
+}
+
+.my-appointments .appointment-card .card-doctor {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.my-appointments .appointment-card .card-hospital {
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.my-appointments .appointment-card .card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.my-appointments .appointment-card .card-meta .card-date-time {
+  font-weight: 500;
+}
+
+.my-appointments .appointment-card .card-meta .card-type {
+  color: var(--color-text-muted);
+}
+
+.my-appointments .appointment-card .status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.my-appointments .appointment-card .status-badge.confirmed {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.my-appointments .appointment-card .status-badge.completed {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.my-appointments .appointment-card .status-badge.cancelled {
+  background: var(--color-emergency-bg);
+  color: var(--color-emergency);
+}
+
+.my-appointments .appointment-card .status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.my-appointments .appointment-card .chief-complaint {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.my-appointments .appointment-card .chief-complaint strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.my-appointments .card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.my-appointments .btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.my-appointments .btn-danger-outline {
+  color: var(--color-emergency);
+  border-color: var(--color-emergency);
+}
+
+.my-appointments .btn-danger-outline:hover {
+  background: var(--color-emergency-bg);
+}
+
+.my-appointments .card-edit-form {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.my-appointments .card-edit-form .edit-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.my-appointments .card-edit-form .edit-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.my-appointments .card-edit-form .edit-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.my-appointments .appointment-error {
+  background: var(--color-emergency-bg);
+  color: var(--color-emergency);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.my-appointments .appointment-success {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.my-appointments .edit-section {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.my-appointments .edit-hint {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0.25rem 0 0.5rem;
+}
+
+.my-appointments .slots-loading {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0.5rem 0;
+}
+
+.my-appointments .reschedule-slot-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+}
+
+.my-appointments .reschedule-date-group {
+  margin-bottom: 0.25rem;
+}
+
+.my-appointments .reschedule-date-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.my-appointments .reschedule-slot-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.my-appointments .reschedule-slot-btn {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8125rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.my-appointments .reschedule-slot-btn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.my-appointments .reschedule-slot-btn.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  font-weight: 600;
+}

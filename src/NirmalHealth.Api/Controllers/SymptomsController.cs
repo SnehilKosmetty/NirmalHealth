@@ -15,13 +15,22 @@ public class SymptomsController : ControllerBase
     public SymptomsController(ISymptomAnalysisService symptomService) => _symptomService = symptomService;
 
     [HttpPost("analyze")]
-    public async Task<ActionResult<SymptomAnalysisResultDto>> Analyze([FromBody] SymptomAnalysisRequestDto dto, CancellationToken ct)
+    public async Task<ActionResult<SymptomAnalysisResultDto>> Analyze([FromBody] SymptomAnalysisRequestDto? dto, CancellationToken ct)
     {
+        if (dto == null || string.IsNullOrWhiteSpace(dto.SymptomsText))
+            return BadRequest(new { message = "Symptoms text is required." });
         int? userId = null;
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var uid))
             userId = uid;
-        var result = await _symptomService.AnalyzeAsync(dto, userId, ct);
-        return Ok(result);
+        try
+        {
+            var result = await _symptomService.AnalyzeAsync(dto, userId, ct);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Symptom analysis failed.", detail = ex.Message });
+        }
     }
 }

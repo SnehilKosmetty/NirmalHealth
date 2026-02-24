@@ -16,9 +16,16 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const aadhaarDigits = aadhaarNumber.replace(/\D/g, '');
+  const isAadhaarValid = aadhaarDigits.length === 12;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (!isAadhaarValid) {
+      setError(t('register.aadhaarRequired'));
+      return;
+    }
     setLoading(true);
     try {
       await register({
@@ -26,7 +33,7 @@ export default function Register() {
         phone: phone.trim(),
         password,
         fullName: fullName.trim(),
-        aadhaarNumber: aadhaarNumber.trim() || undefined,
+        aadhaarNumber: aadhaarDigits,
       });
       navigate('/');
     } catch (e) {
@@ -58,14 +65,17 @@ export default function Register() {
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
           </label>
           <label>
-            <span>Aadhaar (optional, for verification)</span>
+            <span>{t('register.aadhaarLabel')}</span>
             <input
               type="text"
               value={aadhaarNumber}
               onChange={(e) => setAadhaarNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
-              placeholder="12 digits"
+              placeholder={t('register.aadhaarPlaceholder')}
               maxLength={12}
+              inputMode="numeric"
+              required
             />
+            <span className="auth-hint">{t('register.aadhaarHint')}</span>
           </label>
           {error && <p className="auth-error">{error}</p>}
           <button type="submit" className="btn btn-primary btn-block" disabled={loading}>

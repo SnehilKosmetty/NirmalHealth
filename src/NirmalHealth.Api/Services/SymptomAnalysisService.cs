@@ -21,11 +21,13 @@ public class SymptomAnalysisService : ISymptomAnalysisService
         var ai = await _openAi.GetSymptomRecommendationAsync(
             dto.SymptomsText, dto.Age, dto.Gender, dto.MedicalHistory, ct);
 
-        var specialtyForDb = ai.SuggestedSpecialty.Replace("General Physician / Internal Medicine", "General Medicine").Trim();
+        var suggestedSpecialty = ai.SuggestedSpecialty ?? "General Medicine";
+        var specialtyForDb = suggestedSpecialty.Replace("General Physician / Internal Medicine", "General Medicine").Trim();
+        if (string.IsNullOrWhiteSpace(specialtyForDb)) specialtyForDb = "General Medicine";
         var hospitals = await _db.Hospitals
             .AsNoTracking()
             .Include(h => h.HospitalSpecialties).ThenInclude(hs => hs.Specialty)
-            .Where(h => h.IsActive && h.HospitalSpecialties.Any(hs => hs.Specialty.Name == specialtyForDb || hs.Specialty.Name == ai.SuggestedSpecialty))
+            .Where(h => h.IsActive && h.HospitalSpecialties.Any(hs => hs.Specialty != null && (hs.Specialty.Name == specialtyForDb || hs.Specialty.Name == suggestedSpecialty)))
             .Select(h => h.Id)
             .Take(10)
             .ToListAsync(ct);
@@ -35,25 +37,32 @@ public class SymptomAnalysisService : ISymptomAnalysisService
         var log = new SymptomAnalysis
         {
             UserId = userId,
-            SymptomsText = dto.SymptomsText,
+            SymptomsText = dto.SymptomsText ?? "",
             Age = dto.Age,
             Gender = dto.Gender,
             MedicalHistory = dto.MedicalHistory,
             SuggestedSpecialty = specialtyForDb,
-            PossibleConditionsJson = System.Text.Json.JsonSerializer.Serialize(ai.PossibleConditions),
+            PossibleConditionsJson = System.Text.Json.JsonSerializer.Serialize(ai.PossibleConditions ?? Array.Empty<string>()),
             RecommendedHospitalIdsJson = System.Text.Json.JsonSerializer.Serialize(hospitals),
             CreatedAtUtc = DateTime.UtcNow
         };
-        _db.SymptomAnalyses.Add(log);
-        await _db.SaveChangesAsync(ct);
+        try
+        {
+            _db.SymptomAnalyses.Add(log);
+            await _db.SaveChangesAsync(ct);
+        }
+        catch
+        {
+            // Log save is best-effort; still return the analysis to the user
+        }
 
         return new SymptomAnalysisResultDto
         {
-            UrgencyLevel = ai.UrgencyLevel,
-            Analysis = ai.Analysis,
-            SuggestedSpecialty = ai.SuggestedSpecialty,
-            PossibleConditions = ai.PossibleConditions,
-            SuggestedActions = ai.SuggestedActions,
+            UrgencyLevel = ai.UrgencyLevel ?? "Routine",
+            Analysis = ai.Analysis ?? "",
+            SuggestedSpecialty = ai.SuggestedSpecialty ?? "General Medicine",
+            PossibleConditions = ai.PossibleConditions ?? Array.Empty<string>(),
+            SuggestedActions = ai.SuggestedActions ?? Array.Empty<string>(),
             Disclaimer = "This AI analysis is for informational purposes only and should not replace professional medical advice. Always consult a qualified healthcare provider for diagnosis and treatment.",
             RecommendedHospitalIds = hospitals.ToArray()
         };

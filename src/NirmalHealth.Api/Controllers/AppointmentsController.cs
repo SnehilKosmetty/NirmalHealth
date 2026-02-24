@@ -56,10 +56,46 @@ public class AppointmentsController : ControllerBase
         if (a == null) return NotFound();
         return Ok(a);
     }
+
+    [Authorize]
+    [HttpPatch("{id:int}/cancel")]
+    public async Task<ActionResult<AppointmentDto>> Cancel(int id, CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var patientId))
+            return Unauthorized(new { message = "Not logged in." });
+        var a = await _appointmentService.CancelAsync(id, patientId, ct);
+        if (a == null)
+            return BadRequest(new { message = "Appointment not found or cannot be cancelled (only scheduled appointments can be cancelled)." });
+        return Ok(a);
+    }
+
+    [Authorize]
+    [HttpPatch("{id:int}")]
+    public async Task<ActionResult<AppointmentDto>> Update(int id, [FromBody] UpdateAppointmentRequest body, CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var patientId))
+            return Unauthorized(new { message = "Not logged in." });
+        AppointmentDto? a;
+        if (body.SlotId.HasValue && body.SlotId.Value > 0)
+            a = await _appointmentService.RescheduleAsync(id, patientId, body.SlotId.Value, body.ChiefComplaint, ct);
+        else
+            a = await _appointmentService.UpdateChiefComplaintAsync(id, patientId, body.ChiefComplaint, ct);
+        if (a == null)
+            return BadRequest(new { message = "Appointment not found or cannot be updated. For reschedule, the new slot may be taken." });
+        return Ok(a);
+    }
 }
 
 public class BookAppointmentRequest
 {
     public int SlotId { get; set; }
     public string? ChiefComplaint { get; set; }
+}
+
+public class UpdateAppointmentRequest
+{
+    public string? ChiefComplaint { get; set; }
+    public int? SlotId { get; set; }
 }

@@ -1,0 +1,122 @@
+.book-appointment {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.book-appointment .page-title {
+  margin-bottom: 0.25rem;
+}
+
+.book-appointment .page-subtitle {
+  color: var(--color-text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.book-appointment .section {
+  margin-bottom: 1.75rem;
+}
+
+.book-appointment .section-label {
+  display: block;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+  font-size: 0.9375rem;
+}
+
+.book-appointment .chief-complaint-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.book-appointment .chief-complaint-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.book-appointment .chief-complaint-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.book-appointment .date-group-label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.book-appointment .date-group {
+  margin-bottom: 1.5rem;
+}
+
+.book-appointment .slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.book-appointment .slot-card {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  text-align: left;
+  border: 2px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.book-appointment .slot-card:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.book-appointment .slot-card.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.book-appointment .slot-card .slot-time {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.book-appointment .slot-card .slot-type {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.book-appointment .empty-msg {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 1.5rem;
+  margin: 0;
+}
+
+.book-appointment .confirm-row {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.book-appointment .btn-confirm {
+  min-width: 180px;
+  padding: 0.75rem 1.5rem;
+}
+
+.book-appointment .loading-msg {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 2rem;
+}

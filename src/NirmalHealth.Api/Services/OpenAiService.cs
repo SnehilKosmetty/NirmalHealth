@@ -70,11 +70,16 @@ Medical history: {medicalHistory ?? "none"}";
         }
 
         var json = await response.Content.ReadAsStringAsync(ct);
-        using var doc = JsonDocument.Parse(json);
-        var content = doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString()?.Trim() ?? "{}";
-        if (content.StartsWith("```")) content = content.Replace("```json", "").Replace("```", "").Trim();
         try
         {
+            using var doc = JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty("choices", out var choices) || choices.GetArrayLength() == 0)
+                return FallbackResult();
+            var firstChoice = choices[0];
+            if (!firstChoice.TryGetProperty("message", out var message) || !message.TryGetProperty("content", out var contentEl))
+                return FallbackResult();
+            var content = contentEl.GetString()?.Trim() ?? "{}";
+            if (content.StartsWith("```")) content = content.Replace("```json", "").Replace("```", "").Trim();
             using var resultDoc = JsonDocument.Parse(content);
             var root = resultDoc.RootElement;
             var urgency = GetString(root, "urgencyLevel") ?? "Routine";
@@ -89,15 +94,17 @@ Medical history: {medicalHistory ?? "none"}";
         }
         catch
         {
-            return new SymptomAiResult(
-                "Routine",
-                "Please consult a doctor for proper diagnosis.",
-                "General Medicine",
-                new[] { "Please consult a doctor for proper diagnosis." },
-                new[] { "Seek a consultation with a General Physician." }
-            );
+            return FallbackResult();
         }
     }
+
+    private static SymptomAiResult FallbackResult() => new(
+        "Routine",
+        "Unable to analyze; please describe your symptoms to a doctor for evaluation.",
+        "General Medicine",
+        new[] { "Please consult a doctor for proper diagnosis." },
+        new[] { "Seek a consultation with a General Physician.", "In emergency (breathing difficulty, chest pain, severe pain), go to the nearest hospital." }
+    );
 
     private static string? GetString(JsonElement root, string name) =>
         root.TryGetProperty(name, out var p) ? p.GetString() : null;

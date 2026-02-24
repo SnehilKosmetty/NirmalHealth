@@ -106,6 +106,79 @@ public class AppointmentService : IAppointmentService
         return list.Select(a => MapToDto(a, a.Slot, a.Patient));
     }
 
+    public async Task<IEnumerable<AppointmentDto>> GetAllAppointmentsAsync(DateOnly? date, CancellationToken ct = default)
+    {
+        var q = _db.Appointments
+            .Include(a => a.Slot).ThenInclude(s => s.Doctor).ThenInclude(d => d.Hospital)
+            .Include(a => a.Patient)
+            .AsNoTracking();
+        if (date.HasValue) q = q.Where(a => a.Slot.Date == date.Value);
+        var list = await q.OrderBy(a => a.Slot.Date).ThenBy(a => a.Slot.StartTime).ToListAsync(ct);
+        return list.Select(a => MapToDto(a, a.Slot, a.Patient));
+    }
+
+    public async Task<AppointmentDto?> CancelAsync(int appointmentId, int patientId, CancellationToken ct = default)
+    {
+        var a = await _db.Appointments
+            .Include(x => x.Slot).ThenInclude(s => s.Doctor).ThenInclude(d => d.Hospital)
+            .Include(x => x.Patient)
+            .FirstOrDefaultAsync(x => x.Id == appointmentId && x.PatientId == patientId, ct);
+        if (a == null) return null;
+        if (a.Status != AppointmentStatus.Scheduled) return null;
+
+        a.Status = AppointmentStatus.Cancelled;
+        a.UpdatedAtUtc = DateTime.UtcNow;
+        var slot = await _db.AppointmentSlots.FindAsync(new object[] { a.SlotId }, ct);
+        if (slot != null) slot.IsBooked = false;
+        await _db.SaveChangesAsync(ct);
+        return MapToDto(a, a.Slot, a.Patient);
+    }
+
+    public async Task<AppointmentDto?> UpdateChiefComplaintAsync(int appointmentId, int patientId, string? chiefComplaint, CancellationToken ct = default)
+    {
+        var a = await _db.Appointments
+            .Include(x => x.Slot).ThenInclude(s => s.Doctor).ThenInclude(d => d.Hospital)
+            .Include(x => x.Patient)
+            .FirstOrDefaultAsync(x => x.Id == appointmentId && x.PatientId == patientId, ct);
+        if (a == null) return null;
+        if (a.Status != AppointmentStatus.Scheduled) return null;
+
+        a.ChiefComplaint = chiefComplaint;
+        a.UpdatedAtUtc = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
+        return MapToDto(a, a.Slot, a.Patient);
+    }
+
+    public async Task<AppointmentDto?> RescheduleAsync(int appointmentId, int patientId, int newSlotId, string? chiefComplaint, CancellationToken ct = default)
+    {
+        var a = await _db.Appointments
+            .Include(x => x.Slot).ThenInclude(s => s.Doctor).ThenInclude(d => d.Hospital)
+            .Include(x => x.Patient)
+            .FirstOrDefaultAsync(x => x.Id == appointmentId && x.PatientId == patientId, ct);
+        if (a == null) return null;
+        if (a.Status != AppointmentStatus.Scheduled) return null;
+        if (a.SlotId == newSlotId) return await UpdateChiefComplaintAsync(appointmentId, patientId, chiefComplaint, ct);
+
+        var newSlot = await _db.AppointmentSlots
+            .Include(s => s.Doctor).ThenInclude(d => d.Hospital)
+            .FirstOrDefaultAsync(s => s.Id == newSlotId && !s.IsBooked, ct);
+        if (newSlot == null) return null;
+
+        var oldSlot = await _db.AppointmentSlots.FindAsync(new object[] { a.SlotId }, ct);
+        if (oldSlot != null) oldSlot.IsBooked = false;
+        newSlot.IsBooked = true;
+        a.SlotId = newSlotId;
+        a.ChiefComplaint = chiefComplaint ?? a.ChiefComplaint;
+        a.UpdatedAtUtc = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
+
+        var updated = await _db.Appointments
+            .Include(x => x.Slot).ThenInclude(s => s.Doctor).ThenInclude(d => d.Hospital)
+            .Include(x => x.Patient)
+            .FirstAsync(x => x.Id == appointmentId, ct);
+        return MapToDto(updated, updated.Slot, updated.Patient);
+    }
+
     private static AppointmentDto MapToDto(Appointment a, AppointmentSlot slot, User? patient) => new()
     {
         Id = a.Id,

@@ -19,21 +19,21 @@ export default function HospitalDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <div className="container page">Loading...</div>;
-  if (!hospital) return <div className="container page">Hospital not found.</div>;
+  if (loading) return <div className="container page">{t('hospitalDetail.loading')}</div>;
+  if (!hospital) return <div className="container page">{t('hospitalDetail.notFound')}</div>;
 
   return (
     <div className="container page">
       <h1 className="page-title">{hospital.name}</h1>
       <p className="page-subtitle">📍 {hospital.address}</p>
-      <p><strong>Phone:</strong> <a href={`tel:${hospital.phone}`}>{hospital.phone}</a></p>
-      {hospital.email && <p><strong>Email:</strong> {hospital.email}</p>}
-      <p><strong>Beds:</strong> {hospital.bedCount} · <strong>Emergency:</strong> {hospital.isEmergency ? 'Yes' : 'No'}</p>
+      <p><strong>{t('hospitalDetail.phone')}:</strong> <a href={`tel:${hospital.phone}`}>{hospital.phone}</a></p>
+      {hospital.email && <p><strong>{t('hospitalDetail.email')}:</strong> {hospital.email}</p>}
+      <p><strong>{t('hospitalDetail.beds')}:</strong> {hospital.bedCount} · <strong>{t('hospitalDetail.emergency')}:</strong> {hospital.isEmergency ? t('hospitalDetail.yes') : t('hospitalDetail.no')}</p>
       <div style={{ marginTop: '1rem' }}>
         {hospital.specialties.map((s) => <span key={s} className="tag" style={{ marginRight: 8 }}>{s}</span>)}
       </div>
 
-      <h2 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Doctors</h2>
+      <h2 style={{ marginTop: '2rem', marginBottom: '1rem' }}>{t('hospitalDetail.doctors')}</h2>
       <div className="hospital-doctors-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
         {hospital.doctors.map((d) => (
           <div key={d.id} className="card" style={{ padding: '1rem' }}>
@@ -43,10 +43,10 @@ export default function HospitalDetail() {
               {d.specialties.map((s) => <span key={s} className="tag" style={{ marginRight: 4, fontSize: '0.75rem' }}>{s}</span>)}
             </div>
             <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
-              {d.supportsInPerson && 'In-person · '}{d.supportsVideo && 'Video'}
+              {d.supportsInPerson && t('hospitalDetail.inPerson') + ' · '}{d.supportsVideo && t('hospitalDetail.video')}
             </p>
             {user && (
-              <Link to={`/book/${d.id}`} className="btn btn-primary" style={{ marginTop: '0.75rem' }}>Book appointment</Link>
+              <Link to={`/book/${d.id}`} className="btn btn-primary" style={{ marginTop: '0.75rem' }}>{t('hospitalDetail.bookAppointment')}</Link>
             )}
           </div>
         ))}

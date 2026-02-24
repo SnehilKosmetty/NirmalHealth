@@ -4,6 +4,16 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Layout.css';
 
+function LogoutIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
 export default function Layout() {
   const { t, i18n } = useTranslation();
   const { user, logout } = useAuth();
@@ -28,11 +38,18 @@ export default function Layout() {
             <Link to="/hospitals" className={isActive('/hospitals') ? 'active' : ''}>{t('nav.hospitals')}</Link>
             <Link to="/symptom-checker" className={isActive('/symptom-checker') ? 'active' : ''}>{t('nav.symptomChecker')}</Link>
             <Link to="/emergency" className={isActive('/emergency') ? 'active' : ''}>{t('nav.emergency')}</Link>
+            {(user?.roles.includes('SuperAdmin') || user?.roles.includes('HospitalAdmin')) && (
+              <Link to="/admin" className={isActive('/admin') ? 'active' : ''}>{t('nav.dashboard')}</Link>
+            )}
+            {user && (
+              <Link to="/my-appointments" className={isActive('/my-appointments') ? 'active' : ''}>{t('nav.myAppointments')}</Link>
+            )}
           </nav>
           <div className="header-actions">
-            <div className="lang-select">
-              <span className="lang-icon">🌐</span>
-              <select value={i18n.language} onChange={(e) => setLang(e.target.value)}>
+            <div className="lang-select" aria-label={t('nav.language')}>
+              <span className="lang-icon" aria-hidden>🌐</span>
+              <label htmlFor="lang-select" className="lang-label">{t('nav.language')}</label>
+              <select id="lang-select" value={i18n.language} onChange={(e) => setLang(e.target.value)}>
                 <option value="en">English</option>
                 <option value="hi">हिंदी</option>
                 <option value="te">తెలుగు</option>
@@ -40,11 +57,14 @@ export default function Layout() {
             </div>
             {user ? (
               <div className="user-menu">
-                {user.roles.includes('SuperAdmin') || user.roles.includes('HospitalAdmin') ? (
-                  <Link to="/admin" className="btn btn-outline" style={{ marginRight: 8 }}>Admin</Link>
-                ) : null}
-                <Link to="/my-appointments" className="btn btn-outline" style={{ marginRight: 8 }}>My Appointments</Link>
-                <button type="button" className="btn btn-outline" onClick={logout}>{t('auth.logout')}</button>
+                <Link to="/profile" className="header-profile-link">{t('nav.profile')}</Link>
+                {(user.roles.includes('SuperAdmin') || user.roles.includes('HospitalAdmin')) && (
+                  <span className="header-admin-label">{t('nav.admin')}</span>
+                )}
+                <button type="button" className="btn btn-outline header-logout-btn" onClick={logout} title={t('auth.logout')}>
+                  <LogoutIcon className="header-logout-icon" aria-hidden />
+                  {t('auth.logout')}
+                </button>
               </div>
             ) : (
               <>
