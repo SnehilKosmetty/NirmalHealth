@@ -25,7 +25,7 @@ Default (Windows Authentication, local SQL Express):
 
 ```json
 "ConnectionStrings": {
-  "DefaultConnection": "Server=SNEHILKOSMETTY\\SQLEXPRESS;Database=NirmalHealth;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true"
+  "DefaultConnection": "Server=\\SQLEXPRESS;Database=NirmalHealth;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true"
 }
 ```
 
